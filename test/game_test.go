@@ -31,6 +31,11 @@ func TestSetGameInfo(t *testing.T) {
 		t.Fatal("new client err ", err.Error())
 	}
 
+	myAddress, err := c.Address()
+	if err != nil {
+		t.Fatal("get address err ", err.Error())
+	}
+
 	roundID := uuid.NewString()
 	gameContractAddress := common.HexToAddress(contractAddress)
 	instance, err := contracts.NewGame(gameContractAddress, c.EthClient())
@@ -41,7 +46,7 @@ func TestSetGameInfo(t *testing.T) {
 	result, err := c.InvokeContract(func(opts *bind.TransactOpts) (*types.Transaction, error) {
 		gameInfo := contracts.GameInfoContractGameInfo{
 			DomainSeparationTag: 1,
-			ReplayCID:           uuid.NewString(),
+			Address:             myAddress.Hex(),
 			Entropy:             []byte{},
 			VRFHeight:           1,
 			VRFProof:            []byte{},

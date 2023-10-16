@@ -70,3 +70,18 @@ func (c *client) InvokeContract(invokeFunc func(opts *bind.TransactOpts) (*types
 func (c *client) EthClient() *ethclient.Client {
 	return c.client
 }
+
+func (c *client) Address() (common.Address, error) {
+	privateKey, err := crypto.HexToECDSA(c.cfg.privateKey)
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return common.Address{}, errors.New("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+
+	return crypto.PubkeyToAddress(*publicKeyECDSA), nil
+}
