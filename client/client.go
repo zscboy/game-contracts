@@ -14,8 +14,8 @@ import (
 )
 
 type client struct {
-	Cfg    Config
-	Client *ethclient.Client
+	cfg    Config
+	client *ethclient.Client
 }
 
 func New(opts ...Option) (*client, error) {
@@ -31,14 +31,14 @@ func New(opts ...Option) (*client, error) {
 	}
 
 	return &client{
-		Cfg:    cfg,
-		Client: c,
+		cfg:    cfg,
+		client: c,
 	}, nil
 }
 
 // InvokeContract Invoke an EVM smart contract
 func (c *client) InvokeContract(invokeFunc func(opts *bind.TransactOpts) (*types.Transaction, error)) ([]byte, error) {
-	privateKey, err := crypto.HexToECDSA(c.Cfg.privateKey)
+	privateKey, err := crypto.HexToECDSA(c.cfg.privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (c *client) InvokeContract(invokeFunc func(opts *bind.TransactOpts) (*types
 	}
 
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	signer := types.LatestSignerForChainID(big.NewInt(c.Cfg.networkID))
+	signer := types.LatestSignerForChainID(big.NewInt(c.cfg.networkID))
 	opts := &bind.TransactOpts{
 		Signer: func(address common.Address, transaction *types.Transaction) (*types.Transaction, error) {
 			return types.SignTx(transaction, signer, privateKey)
@@ -65,4 +65,8 @@ func (c *client) InvokeContract(invokeFunc func(opts *bind.TransactOpts) (*types
 	}
 
 	return tx.MarshalJSON()
+}
+
+func (c *client) EthClient() *ethclient.Client {
+	return c.client
 }

@@ -13,26 +13,39 @@ import (
 	contracts "github.com/zscboy/game-contracts/contracts"
 )
 
+const (
+	endpoint  = "https://api.calibration.node.glif.io/"
+	networkID = 314159
+
+	contractAddress = "0x0f35f7BE96936D68612d438302D1De7065376A2d"
+)
+
 func TestSetGameInfo(t *testing.T) {
 	c, err := client.New(
 		client.PrivateKeyOption(os.Getenv("PRIVATE_KEY")),
+		client.EndpointOption(endpoint),
+		client.NetworkIDOption(networkID),
 	)
+
 	if err != nil {
 		t.Fatal("new client err ", err.Error())
 	}
 
 	roundID := uuid.NewString()
-	vpsContractAddress := common.HexToAddress("0x0f35f7BE96936D68612d438302D1De7065376A2d")
-	result, err := c.InvokeContract(func(opts *bind.TransactOpts) (*types.Transaction, error) {
-		instance, err := contracts.NewGame(vpsContractAddress, c.Client)
-		if err != nil {
-			return nil, err
-		}
+	gameContractAddress := common.HexToAddress(contractAddress)
+	instance, err := contracts.NewGame(gameContractAddress, c.EthClient())
+	if err != nil {
+		t.Fatal("new contract instance err ", err.Error())
+	}
 
+	result, err := c.InvokeContract(func(opts *bind.TransactOpts) (*types.Transaction, error) {
 		gameInfo := contracts.GameInfoContractGameInfo{
 			DomainSeparationTag: 1,
 			ReplayCID:           uuid.NewString(),
+			Entropy:             []byte{},
 			VRFHeight:           1,
+			VRFProof:            []byte{},
+			GameResults:         []byte{},
 		}
 		return instance.SetGameInfo(opts, roundID, gameInfo)
 	})
@@ -53,11 +66,6 @@ func TestSetGameInfo(t *testing.T) {
 			t.Log("query order timeout!")
 			return
 		case <-ticker.C:
-			instance, err := contracts.NewGame(vpsContractAddress, c.Client)
-			if err != nil {
-				t.Logf("new game instance err %s", err.Error())
-				continue
-			}
 			order, err := instance.GetGameInfo(&bind.CallOpts{
 				Pending: true,
 			}, roundID)
@@ -76,13 +84,16 @@ func TestSetGameInfo(t *testing.T) {
 func TestDeployGame(t *testing.T) {
 	c, err := client.New(
 		client.PrivateKeyOption(os.Getenv("PRIVATE_KEY")),
+		client.EndpointOption(endpoint),
+		client.NetworkIDOption(networkID),
 	)
+
 	if err != nil {
 		t.Fatal("new client err", err.Error())
 	}
 
 	result, err := c.InvokeContract(func(opts *bind.TransactOpts) (*types.Transaction, error) {
-		addr, tr, _, err := contracts.DeployGame(opts, c.Client)
+		addr, tr, _, err := contracts.DeployGame(opts, c.EthClient())
 		if err != nil {
 			return nil, err
 		}
