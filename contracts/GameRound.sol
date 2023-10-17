@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Game {
+contract GameRound {
     struct Info {
         string GameID;
         string RoundID;
@@ -9,9 +9,15 @@ contract Game {
         string PlayerIDs;
     }
 
+    struct PlayerResult {
+        string PlayerID;
+        uint64 CurrentScore;
+        uint64 WinScore;
+
+    }
+
     struct Result {
-        string GameID;
-        string RoundID;
+        PlayerResult []PlayerResults;
     }
 
     struct Replay {
@@ -19,7 +25,8 @@ contract Game {
         string Address;
         Info GameInfo;
         uint64 VRFHeight;
-        bytes VRFProof;
+        string HashFunc;
+        string Seed;
         Result GameResult;
     }
 }
